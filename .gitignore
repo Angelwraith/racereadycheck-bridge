@@ -1,0 +1,16 @@
+# Build output
+bin/
+obj/
+_pkg/
+
+# Published/packaged app output (large self-contained exe — ship via Releases, never commit)
+RaceReadyCheckBridge/
+
+# Real local bridge config (can contain your token) — only the .sample is tracked
+bridge.config.json
+
+# Release artifacts (GitHub Releases hosts the zip; don't commit the 65MB binary)
+RaceReadyCheckBridge.zip
+
+# Local helpers
+_icon_preview.png

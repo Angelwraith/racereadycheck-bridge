@@ -1,0 +1,17 @@
+{
+  "SiteUrl": "https://racereadycheck.com",
+  "Token": "PASTE_YOUR_BRIDGE_TOKEN_HERE",
+  "Hotkeys": {
+    "F9": "ready_toggle",
+    "F10": "host_start",
+    "F11": "host_reset",
+    "F8": "host_roll",
+    "F6": "telemetry_record"
+  },
+  "Telemetry": {
+    "Enabled": false,
+    "UdpPort": 5300,
+    "LocalPort": 5390,
+    "AllowOrigin": "https://racereadycheck.com"
+  }
+}

@@ -1,0 +1,45 @@
+name: Build & Release Bridge
+
+# Push a version tag (e.g. v0.1.0) to build the Windows exe and publish a Release.
+# You can also run it manually from the Actions tab (workflow_dispatch).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed for `gh release create`
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Same command as build.bat: one self-contained single-file exe.
+      - name: Publish exe
+        run: dotnet publish RaceReadyCheckBridge.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+
+      - name: Package zip
+        shell: pwsh
+        run: |
+          $out = "bin/Release/net8.0-windows/win-x64/publish"
+          New-Item -ItemType Directory -Force _pkg | Out-Null
+          Copy-Item "$out/RaceReadyCheckBridge.exe" _pkg/
+          Copy-Item "bridge.config.sample.json" _pkg/
+          if (Test-Path "rrc.ico")  { Copy-Item "rrc.ico"  _pkg/ }
+          if (Test-Path "README.md"){ Copy-Item "README.md" _pkg/ }
+          Compress-Archive -Path "_pkg/*" -DestinationPath "RaceReadyCheckBridge.zip" -Force
+
+      # Create (or update) the GitHub Release for this tag and attach the zip.
+      # Uses the built-in gh CLI — no third-party actions.
+      - name: Publish Release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create $env:GITHUB_REF_NAME RaceReadyCheckBridge.zip --title "Bridge $env:GITHUB_REF_NAME" --notes "RaceReadyCheck Bridge $env:GITHUB_REF_NAME. Unzip and run RaceReadyCheckBridge.exe."

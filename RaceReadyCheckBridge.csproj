@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    RaceReadyCheck Bridge — tiny companion app.
+    Framework only: WinForms (tray icon + hidden hotkey window), System.Net.Http,
+    System.Text.Json. No NuGet packages, nothing from the network. Auditable.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>RaceReadyCheckBridge</AssemblyName>
+    <Version>0.1.0</Version>
+    <!-- Single self-contained exe for `dotnet publish` (see README). -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- RRC logo as the exe + tray icon (multi-size .ico generated from the site's logo.svg). -->
+    <ApplicationIcon>rrc.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Ship the icon next to the exe too, as a runtime fallback. -->
+    <Content Include="rrc.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
