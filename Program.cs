@@ -40,7 +40,7 @@ internal sealed class BridgeContext : ApplicationContext
         };
 
         // --- register modules (this is the extension point) ---
-        _telemetry = new TelemetryModule(_cfg.Telemetry);
+        _telemetry = new TelemetryModule(_cfg.Telemetry, _cfg.Save);
         _hotkeys = new HotkeyModule(_cfg, relay, NotifyReady, LocalAction);   // ready feedback respects toggles; local actions handled here
         _modules.Add(_hotkeys);
         _modules.Add(_telemetry);
@@ -145,6 +145,10 @@ internal sealed class BridgeContext : ApplicationContext
         rec.Click += (_, _) => Notify(ToggleTelemetryRecord());
         menu.Items.Add(rec);
 
+        var hbrec = new ToolStripMenuItem("Start/stop with handbrake (hold ~2s)") { Checked = _telemetry.HandbrakeRecord };
+        hbrec.Click += (_, _) => { _telemetry.HandbrakeRecord = !_telemetry.HandbrakeRecord; hbrec.Checked = _telemetry.HandbrakeRecord; Notify(_telemetry.HandbrakeRecord ? "Handbrake recording ON — hold the handbrake ~2s to start/stop." : "Handbrake recording off."); };
+        menu.Items.Add(hbrec);
+
         var site = new ToolStripMenuItem("Open RaceReadyCheck…");
         site.Click += (_, _) => OpenUrl(_cfg.SiteUrl);
         menu.Items.Add(site);
@@ -167,6 +171,7 @@ internal sealed class BridgeContext : ApplicationContext
             telem.Text = _cfg.Telemetry.Enabled ? "Disable telemetry" : "Enable telemetry";
             rec.Checked = _telemetry.IsRecording;
             rec.Text = _telemetry.IsRecording ? $"Recording… ({_telemetry.RecordedPackets} pkts)" : "Record telemetry";
+            hbrec.Checked = _telemetry.HandbrakeRecord;
         };
         return menu;
     }

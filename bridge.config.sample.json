@@ -10,7 +10,7 @@
   },
   "Telemetry": {
     "Enabled": false,
-    "UdpPort": 5300,
+    "UdpPort": 9999,
     "LocalPort": 5390,
     "AllowOrigin": "https://racereadycheck.com"
   }

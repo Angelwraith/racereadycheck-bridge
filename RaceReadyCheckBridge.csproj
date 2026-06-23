@@ -12,7 +12,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>RaceReadyCheckBridge</AssemblyName>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <!-- Single self-contained exe for `dotnet publish` (see README). -->
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>false</SelfContained>

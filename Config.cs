@@ -39,12 +39,17 @@ public sealed class Config
     {
         /// <summary>Telemetry is OFF by default. The hotkey relay works without it.</summary>
         public bool Enabled { get; set; } = false;
-        /// <summary>UDP port Forza "Data Out" is configured to send to (Forza default 5300).</summary>
-        public int UdpPort { get; set; } = 5300;
+        /// <summary>UDP port Forza "Data Out" is configured to send to. RRC standardizes on
+        /// 9999 to match the original EXE (ready_check.py default) and existing user setups.</summary>
+        public int UdpPort { get; set; } = 9999;
         /// <summary>Local-only HTTP/SSE port the browser tab reads telemetry from. Never leaves this PC.</summary>
         public int LocalPort { get; set; } = 5390;
         /// <summary>Origin allowed to read the local telemetry stream (CORS).</summary>
         public string AllowOrigin { get; set; } = "https://racereadycheck.com";
+        /// <summary>Gamepad-friendly trigger: hold the in-game handbrake ~2s to start/stop
+        /// recording (no keyboard). OFF by default — the handbrake is rare but not unused,
+        /// so the hold gesture + this opt-in toggle avoid accidental triggers.</summary>
+        public bool HandbrakeRecord { get; set; } = false;
     }
 
     // ---- load / save ----

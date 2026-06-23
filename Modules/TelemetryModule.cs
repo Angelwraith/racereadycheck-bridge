@@ -27,7 +27,15 @@ public sealed class TelemetryModule : IBridgeModule
     private static readonly byte[] FLOG_HEADER = { 0x46, 0x48, 0x36, 0x4C, 0x4F, 0x47, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00 };
 
     private readonly Config.TelemetryConfig _cfg;
+    private readonly Action? _persist;          // save the parent config when a setting changes
     private UdpClient? _udp;
+
+    // Handbrake-hold record trigger (gamepad-friendly). Hold >= threshold for HoldMs to toggle,
+    // then release to re-arm — so a brief drift/handbrake tap won't fire it.
+    private const int HB_THRESHOLD = 80;        // % of full handbrake
+    private const int HB_HOLD_MS = 2000;
+    private DateTime? _hbDown;
+    private bool _hbArmed = true;
     private HttpListener? _http;
     private CancellationTokenSource? _cts;
     private volatile string _latestJson = "{\"raceOn\":false}";
@@ -48,7 +56,7 @@ public sealed class TelemetryModule : IBridgeModule
     public string Name => "Telemetry";
     public string Status { get; private set; } = "disabled";
 
-    public TelemetryModule(Config.TelemetryConfig cfg) => _cfg = cfg;
+    public TelemetryModule(Config.TelemetryConfig cfg, Action? persist = null) { _cfg = cfg; _persist = persist; }
 
     public bool IsRecording => _recording;
     public long RecordedPackets => _recPackets;
@@ -83,6 +91,27 @@ public sealed class TelemetryModule : IBridgeModule
         try { _http?.Close(); } catch { }
         _udp = null; _http = null;
         Status = "stopped";
+    }
+
+    // ---- handbrake-hold trigger ----
+    private void CheckHandbrake(int hbPercent)
+    {
+        if (hbPercent >= HB_THRESHOLD)
+        {
+            if (_hbDown == null) _hbDown = DateTime.UtcNow;
+            else if (_hbArmed && (DateTime.UtcNow - _hbDown.Value).TotalMilliseconds >= HB_HOLD_MS)
+            {
+                _hbArmed = false;          // fire once per hold; release re-arms
+                ToggleRecording();
+            }
+        }
+        else { _hbDown = null; _hbArmed = true; }
+    }
+
+    public bool HandbrakeRecord
+    {
+        get => _cfg.HandbrakeRecord;
+        set { _cfg.HandbrakeRecord = value; if (!value) { _hbDown = null; _hbArmed = true; } _persist?.Invoke(); }
     }
 
     // ---- recording control ----
@@ -150,6 +179,7 @@ public sealed class TelemetryModule : IBridgeModule
                 var data = r.Buffer;
                 if (_recording) WriteRecord(data);                 // record every datagram (matches logger.py)
                 if (data.Length >= PACKET_SIZE) { _latestJson = Parse(data); _packets++; }
+                if (_cfg.HandbrakeRecord && data.Length > 318) CheckHandbrake((int)Math.Round(data[318] / 255.0 * 100));
             }
             catch (OperationCanceledException) { break; }
             catch { /* transient; keep listening */ }
@@ -252,11 +282,25 @@ public sealed class TelemetryModule : IBridgeModule
         resp.AddHeader("Access-Control-Allow-Origin", _cfg.AllowOrigin);
         resp.AddHeader("Cache-Control", "no-cache");
 
-        if (ctx.Request.Url?.AbsolutePath == "/health")
+        var path = ctx.Request.Url?.AbsolutePath;
+
+        // Toggle the handbrake-record setting from the website (loopback). GET /config?hbrec=1|0
+        if (path == "/config")
+        {
+            var v = ctx.Request.QueryString["hbrec"];
+            if (v != null) HandbrakeRecord = (v == "1" || v.Equals("true", StringComparison.OrdinalIgnoreCase));
+            resp.ContentType = "application/json";
+            var cb = Encoding.UTF8.GetBytes($"{{\"handbrakeRecord\":{(_cfg.HandbrakeRecord ? "true" : "false")}}}");
+            await resp.OutputStream.WriteAsync(cb, ct);
+            resp.Close();
+            return;
+        }
+
+        if (path == "/health")
         {
             resp.ContentType = "application/json";
             var bytes = Encoding.UTF8.GetBytes(
-                $"{{\"ok\":true,\"packets\":{_packets},\"recording\":{(_recording ? "true" : "false")},\"recordedPackets\":{_recPackets}}}");
+                $"{{\"ok\":true,\"packets\":{_packets},\"recording\":{(_recording ? "true" : "false")},\"recordedPackets\":{_recPackets},\"handbrakeRecord\":{(_cfg.HandbrakeRecord ? "true" : "false")}}}");
             await resp.OutputStream.WriteAsync(bytes, ct);
             resp.Close();
             return;
@@ -274,7 +318,7 @@ public sealed class TelemetryModule : IBridgeModule
                 await w.WriteAsync(_latestJson);
                 await w.WriteAsync("\n\n");
                 await w.FlushAsync();
-                await Task.Delay(33, ct);   // ~30 Hz
+                await Task.Delay(16, ct);   // ~60 Hz (match the game's output for a smooth HUD)
             }
         }
         catch { /* client disconnected */ }
