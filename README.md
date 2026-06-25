@@ -1,6 +1,6 @@
 # RaceReadyCheck Bridge
 
-A tiny, optional companion for [RaceReadyCheck](https://racereadycheck.com). It does two things, and **only** these:
+An optional companion for [RaceReadyCheck](https://racereadycheck.com). It does two things, and **only** these:
 
 1. **Global hotkeys** — press a key (default **F8**) to toggle your *ready* status in your lobby even while Forza is fullscreen, and **F9** (host) to start the countdown.
 2. **Optional telemetry relay** — if you turn it on, it reads Forza's "Data Out" UDP stream on your PC and serves it to the RaceReadyCheck tab in your browser **over localhost only**.
