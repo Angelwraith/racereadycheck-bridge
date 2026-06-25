@@ -66,6 +66,7 @@ public sealed class TelemetryModule : IBridgeModule
     {
         if (!_cfg.Enabled) { Status = "disabled"; return; }
         if (_udp != null) return;   // already running
+        try { EnsureLogDir(); } catch { }   // create Documents log folder + migrate old AppData recordings up front
         _cts = new CancellationTokenSource();
         try
         {
@@ -122,15 +123,36 @@ public sealed class TelemetryModule : IBridgeModule
         return StartRecording();
     }
 
+    // Recordings live in Documents so the website's folder picker can open them. Older builds used
+    // %AppData%\RaceReadyCheck\telemetry, but browsers BLOCK AppData (and everything under it) from
+    // the File System Access picker — so the site could never read logs there.
     public static string LogDir() =>
-        System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RaceReadyCheck", "telemetry");
+        System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "RaceReadyCheck", "telemetry");
+
+    // Create the Documents log folder and migrate any recordings left in the old AppData location.
+    public static string EnsureLogDir()
+    {
+        var dir = LogDir();
+        System.IO.Directory.CreateDirectory(dir);
+        try
+        {
+            var oldDir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RaceReadyCheck", "telemetry");
+            if (System.IO.Directory.Exists(oldDir) && !string.Equals(oldDir, dir, StringComparison.OrdinalIgnoreCase))
+                foreach (var f in System.IO.Directory.GetFiles(oldDir, "*.flog"))
+                {
+                    var dest = System.IO.Path.Combine(dir, System.IO.Path.GetFileName(f));
+                    if (!System.IO.File.Exists(dest)) System.IO.File.Move(f, dest);   // keep the user's existing recordings
+                }
+        }
+        catch { /* best-effort migration — never block recording */ }
+        return dir;
+    }
 
     private string StartRecording()
     {
         try
         {
-            var dir = LogDir();
-            System.IO.Directory.CreateDirectory(dir);
+            var dir = EnsureLogDir();
             var path = System.IO.Path.Combine(dir, DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".flog");
             var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
             fs.Write(FLOG_HEADER, 0, FLOG_HEADER.Length);
@@ -300,7 +322,7 @@ public sealed class TelemetryModule : IBridgeModule
         {
             resp.ContentType = "application/json";
             var bytes = Encoding.UTF8.GetBytes(
-                $"{{\"ok\":true,\"packets\":{_packets},\"recording\":{(_recording ? "true" : "false")},\"recordedPackets\":{_recPackets},\"handbrakeRecord\":{(_cfg.HandbrakeRecord ? "true" : "false")}}}");
+                $"{{\"ok\":true,\"packets\":{_packets},\"recording\":{(_recording ? "true" : "false")},\"recordedPackets\":{_recPackets},\"handbrakeRecord\":{(_cfg.HandbrakeRecord ? "true" : "false")},\"udpPort\":{_cfg.UdpPort}}}");
             await resp.OutputStream.WriteAsync(bytes, ct);
             resp.Close();
             return;

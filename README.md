@@ -48,7 +48,7 @@ Rebind from the tray menu (**Hotkeys…**) or edit the `Hotkeys` map in the conf
 2. In the tray menu, click **Enable telemetry**.
 3. The browser tab reads `http://127.0.0.1:5390/telemetry` — a full decode of the 324-byte FH6 "Car Dash" packet (all 89 fields; see `../telemetry/parser.py`). Telemetry stays on localhost and is never sent to the server.
 
-**Recording:** press **F6** (or tray → **Record telemetry**) to capture a session to `%APPDATA%\RaceReadyCheck\telemetry\YYYYMMDD-HHMMSS.flog`. The file format is byte-identical to the original RaceReadyCheck app (`../telemetry/logger.py`): magic `FH6LOG\x00\x01` + `uint32` version, then `uint64` ns-timestamp + `uint16` length + raw payload per packet — so existing analysis tools read it unchanged.
+**Recording:** press **F6** (or tray → **Record telemetry**) to capture a session to `Documents\RaceReadyCheck\telemetry\YYYYMMDD-HHMMSS.flog`. (Documents, not AppData — browsers block AppData from the website's folder picker; recordings from older builds migrate here automatically.) The file format is byte-identical to the original RaceReadyCheck app (`../telemetry/logger.py`): magic `FH6LOG\x00\x01` + `uint32` version, then `uint64` ns-timestamp + `uint16` length + raw payload per packet — so existing analysis tools read it unchanged.
 
 ## Build
 

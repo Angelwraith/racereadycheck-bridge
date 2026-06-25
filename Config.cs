@@ -37,8 +37,10 @@ public sealed class Config
 
     public sealed class TelemetryConfig
     {
-        /// <summary>Telemetry is OFF by default. The hotkey relay works without it.</summary>
-        public bool Enabled { get; set; } = false;
+        /// <summary>ON by default so the Telemetry page works out of the box (avoids an extra
+        /// setup step). Independent of the ready-check hotkeys — turn it OFF only if you use the
+        /// bridge solely for hotkeys and don't want a local UDP/HTTP listener running.</summary>
+        public bool Enabled { get; set; } = true;
         /// <summary>UDP port Forza "Data Out" is configured to send to. RRC standardizes on
         /// 9999 to match the original EXE (ready_check.py default) and existing user setups.</summary>
         public int UdpPort { get; set; } = 9999;

@@ -9,7 +9,7 @@
     "F6": "telemetry_record"
   },
   "Telemetry": {
-    "Enabled": false,
+    "Enabled": true,
     "UdpPort": 9999,
     "LocalPort": 5390,
     "AllowOrigin": "https://racereadycheck.com"
