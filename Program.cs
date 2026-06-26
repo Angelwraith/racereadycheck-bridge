@@ -229,9 +229,11 @@ internal sealed class BridgeContext : ApplicationContext
         var actions = new (string label, string action)[]
         {
             ("Toggle ready", "ready_toggle"),
-            ("Start countdown (leader)", "host_start"),
-            ("Reset countdown (leader)", "host_reset"),
             ("Random race (leader)", "host_roll"),
+            ("Back / undo roll (leader)", "host_back"),
+            ("Chime / nudge (leader)", "host_chime"),
+            ("Reset countdown (leader)", "host_reset"),
+            ("Start race (leader)", "host_start"),
             ("Record telemetry", "telemetry_record"),
         };
         using var form = new Form

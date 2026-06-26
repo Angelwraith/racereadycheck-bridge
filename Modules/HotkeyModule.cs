@@ -72,12 +72,16 @@ public sealed class HotkeyModule : IBridgeModule
             _notify(r.Reason switch
             {
                 "no_active_room" => "Join a lobby on the site first.",
-                "not_host"       => "Only the host can start.",
+                "not_host"       => "Only the host can do that.",
+                "no_history"     => "No earlier roll to go back to.",
+                "empty_pool"     => "No legal race in the current pool — check Race settings.",
                 _                => "Bridge: " + (r.Reason ?? "request failed")
             });
-        else if (entry.action == "host_start") _notify($"Countdown started in {r.Room}.");
+        else if (entry.action == "host_start") _notify($"Race start triggered in {r.Room}.");
         else if (entry.action == "host_reset") _notify($"Countdown reset in {r.Room}.");
         else if (entry.action == "host_roll")  _notify($"New random race in {r.Room}.");
+        else if (entry.action == "host_chime") _notify($"Nudged the crew in {r.Room}.");
+        else if (entry.action == "host_back")  _notify($"Went back a roll in {r.Room}.");
         else _notify(r.Ready ? $"You're READY in {r.Room}." : $"Not ready in {r.Room}.");
     }
 
