@@ -13,13 +13,22 @@ public sealed class Config
     public string SiteUrl { get; set; } = "https://racereadycheck.com";
     public string Token { get; set; } = "";          // paste from the website "Connect bridge" panel
 
-    public Dictionary<string, string> Hotkeys { get; set; } = new()
+    // Bumped whenever the default hotkey layout changes; old on-disk configs (version 0)
+    // are upgraded to the current defaults on load. See Load().
+    public const int CurrentHotkeysVersion = 2;
+    public int HotkeysVersion { get; set; } = CurrentHotkeysVersion;
+
+    public Dictionary<string, string> Hotkeys { get; set; } = DefaultHotkeys();
+
+    public static Dictionary<string, string> DefaultHotkeys() => new()
     {
         // hotkey -> action understood by api/bridge/hotkey.php (rebind in tray → Hotkeys…)
-        ["F9"]  = "ready_toggle",
-        ["F10"] = "host_start",        // leader: start the 5s countdown
-        ["F11"] = "host_reset",        // leader: cancel/reset the countdown
+        ["F9"]  = "ready_toggle",      // toggle your ready state
         ["F8"]  = "host_roll",         // leader: pick a new random race
+        ["F7"]  = "host_back",         // leader: undo the last random roll (up to 10 deep)
+        ["F10"] = "host_chime",        // leader: chime/nudge players who haven't readied
+        ["F11"] = "host_reset",        // leader: cancel/reset the countdown
+        ["F12"] = "host_start",        // leader: 1st press = 120s standby, 2nd = 10s final countdown
         ["F6"]  = "telemetry_record",  // local: start/stop recording a .flog session
     };
 
@@ -70,7 +79,18 @@ public sealed class Config
         try
         {
             if (File.Exists(PathOnDisk))
-                return JsonSerializer.Deserialize<Config>(File.ReadAllText(PathOnDisk), Opts) ?? new Config();
+            {
+                var loaded = JsonSerializer.Deserialize<Config>(File.ReadAllText(PathOnDisk), Opts) ?? new Config();
+                // Old configs predate the chime/back/start-on-F12 layout — upgrade them to the
+                // current defaults so existing users get the new actions without hand-editing.
+                if (loaded.HotkeysVersion < CurrentHotkeysVersion)
+                {
+                    loaded.Hotkeys = DefaultHotkeys();
+                    loaded.HotkeysVersion = CurrentHotkeysVersion;
+                    loaded.Save();
+                }
+                return loaded;
+            }
         }
         catch { /* fall through to defaults */ }
         var c = new Config();
