@@ -21,8 +21,14 @@ jobs:
           dotnet-version: '8.0.x'
 
       # Same command as build.bat: one self-contained single-file exe.
+      # Stamp the tag (e.g. v0.4.2 -> 0.4.2) as the assembly version so the bridge's
+      # /health reports the real release version and the site's update check works.
       - name: Publish exe
-        run: dotnet publish RaceReadyCheckBridge.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+        shell: pwsh
+        run: |
+          $ver = "$env:GITHUB_REF_NAME" -replace '^v',''
+          if ($ver -notmatch '^\d+\.\d+\.\d+') { $ver = "0.0.0" }   # manual run with no tag
+          dotnet publish RaceReadyCheckBridge.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:Version=$ver
 
       - name: Package zip
         shell: pwsh

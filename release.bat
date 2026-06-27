@@ -87,7 +87,7 @@ if errorlevel 1 (
 
 echo(
 echo ============================================
-echo   Done! GitHub is now building !VER!.
+echo   Done. GitHub is now building version !VER!
 echo   Progress: Actions tab on the repo
 echo   Result:   github.com/Angelwraith/racereadycheck-bridge/releases
 echo ============================================

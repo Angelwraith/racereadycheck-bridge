@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Threading;
 using System.Windows.Forms;
 using RaceReadyCheckBridge.Modules;
 
@@ -6,12 +7,29 @@ namespace RaceReadyCheckBridge;
 
 internal static class Program
 {
+    // Held for the lifetime of the process so a second launch can detect us and bow out.
+    private static Mutex? _instanceMutex;
+
     [STAThread]
     private static void Main()
     {
+        // Single-instance guard: two bridges fight over the same hotkeys and localhost port,
+        // which looks like "bridge request failed". If one's already running, point the user
+        // at the tray and exit instead of starting a second copy.
+        bool createdNew;
+        _instanceMutex = new Mutex(true, @"Local\RaceReadyCheckBridge_SingleInstance", out createdNew);
+        if (!createdNew)
+        {
+            MessageBox.Show(
+                "RaceReadyCheck Bridge is already running.\n\nLook for its icon in the system tray (bottom-right, near the clock) — you don't need to open it again.",
+                "RaceReadyCheck Bridge", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         Application.Run(new BridgeContext());
+        GC.KeepAlive(_instanceMutex);
     }
 }
 

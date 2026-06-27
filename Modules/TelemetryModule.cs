@@ -321,8 +321,10 @@ public sealed class TelemetryModule : IBridgeModule
         if (path == "/health")
         {
             resp.ContentType = "application/json";
+            var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            var verStr = ver == null ? "0.0.0" : $"{ver.Major}.{ver.Minor}.{ver.Build}";
             var bytes = Encoding.UTF8.GetBytes(
-                $"{{\"ok\":true,\"packets\":{_packets},\"recording\":{(_recording ? "true" : "false")},\"recordedPackets\":{_recPackets},\"handbrakeRecord\":{(_cfg.HandbrakeRecord ? "true" : "false")},\"udpPort\":{_cfg.UdpPort}}}");
+                $"{{\"ok\":true,\"version\":\"{verStr}\",\"packets\":{_packets},\"recording\":{(_recording ? "true" : "false")},\"recordedPackets\":{_recPackets},\"handbrakeRecord\":{(_cfg.HandbrakeRecord ? "true" : "false")},\"udpPort\":{_cfg.UdpPort}}}");
             await resp.OutputStream.WriteAsync(bytes, ct);
             resp.Close();
             return;
