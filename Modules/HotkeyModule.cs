@@ -24,6 +24,7 @@ public sealed class HotkeyModule : IBridgeModule
     private readonly Config _cfg;
     private readonly RelayClient _relay;
     private readonly Action<string> _notify;     // tray balloon / tooltip callback
+    private readonly Action<string> _alert;      // important notices — always shown (ignores the ready-popup toggle)
     private readonly Func<string, string?>? _localAction;  // handle an action locally; return a message, or null to fall through to the server
     private readonly MessageWindow _win;
     private readonly List<(int id, string action)> _registered = new();
@@ -31,9 +32,9 @@ public sealed class HotkeyModule : IBridgeModule
     public string Name => "Hotkeys";
     public string Status { get; private set; } = "not started";
 
-    public HotkeyModule(Config cfg, RelayClient relay, Action<string> notify, Func<string, string?>? localAction = null)
+    public HotkeyModule(Config cfg, RelayClient relay, Action<string> notify, Func<string, string?>? localAction = null, Action<string>? alert = null)
     {
-        _cfg = cfg; _relay = relay; _notify = notify; _localAction = localAction;
+        _cfg = cfg; _relay = relay; _notify = notify; _localAction = localAction; _alert = alert ?? notify;
         _win = new MessageWindow(OnHotkey);
     }
 
@@ -41,16 +42,21 @@ public sealed class HotkeyModule : IBridgeModule
     {
         int id = 1;
         int ok = 0;
+        var failed = new List<string>();
         foreach (var (combo, action) in _cfg.Hotkeys)
         {
-            if (!TryParse(combo, out uint mods, out uint vk)) continue;
+            if (!TryParse(combo, out uint mods, out uint vk)) { failed.Add(combo); continue; }
             if (RegisterHotKey(_win.Handle, id, mods | MOD_NOREPEAT, vk))
             {
                 _registered.Add((id, action));
                 id++; ok++;
             }
+            else failed.Add(combo);   // couldn't bind (reserved by Windows — e.g. F12 — or already in use elsewhere)
         }
         Status = ok > 0 ? $"{ok} hotkey(s) active" : "no hotkeys registered (in use by another app?)";
+        // Don't fail silently: a binding that can't register still shows in the tray but never fires.
+        if (failed.Count > 0)
+            _alert($"These hotkeys couldn't be registered: {string.Join(", ", failed)}. They may be reserved by Windows (F12 is reserved for debugging) or already used by another app. Rebind them via the tray → Hotkeys…");
     }
 
     public void Stop()

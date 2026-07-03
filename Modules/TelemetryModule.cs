@@ -28,6 +28,7 @@ public sealed class TelemetryModule : IBridgeModule
 
     private readonly Config.TelemetryConfig _cfg;
     private readonly Action? _persist;          // save the parent config when a setting changes
+    private readonly Func<string>? _hotkeysJson;  // current bindings as JSON, so the website legend shows the REAL keys
     private UdpClient? _udp;
 
     // Handbrake-hold record trigger (gamepad-friendly). Hold >= threshold for HoldMs to toggle,
@@ -56,7 +57,7 @@ public sealed class TelemetryModule : IBridgeModule
     public string Name => "Telemetry";
     public string Status { get; private set; } = "disabled";
 
-    public TelemetryModule(Config.TelemetryConfig cfg, Action? persist = null) { _cfg = cfg; _persist = persist; }
+    public TelemetryModule(Config.TelemetryConfig cfg, Action? persist = null, Func<string>? hotkeysJson = null) { _cfg = cfg; _persist = persist; _hotkeysJson = hotkeysJson; }
 
     public bool IsRecording => _recording;
     public long RecordedPackets => _recPackets;
@@ -323,8 +324,10 @@ public sealed class TelemetryModule : IBridgeModule
             resp.ContentType = "application/json";
             var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
             var verStr = ver == null ? "0.0.0" : $"{ver.Major}.{ver.Minor}.{ver.Build}";
+            var hk = _hotkeysJson?.Invoke();
+            var hkPart = string.IsNullOrEmpty(hk) ? "" : $",\"hotkeys\":{hk}";   // real bindings for the website legend
             var bytes = Encoding.UTF8.GetBytes(
-                $"{{\"ok\":true,\"version\":\"{verStr}\",\"packets\":{_packets},\"recording\":{(_recording ? "true" : "false")},\"recordedPackets\":{_recPackets},\"handbrakeRecord\":{(_cfg.HandbrakeRecord ? "true" : "false")},\"udpPort\":{_cfg.UdpPort}}}");
+                $"{{\"ok\":true,\"version\":\"{verStr}\"{hkPart},\"packets\":{_packets},\"recording\":{(_recording ? "true" : "false")},\"recordedPackets\":{_recPackets},\"handbrakeRecord\":{(_cfg.HandbrakeRecord ? "true" : "false")},\"udpPort\":{_cfg.UdpPort}}}");
             await resp.OutputStream.WriteAsync(bytes, ct);
             resp.Close();
             return;

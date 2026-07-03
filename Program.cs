@@ -58,8 +58,8 @@ internal sealed class BridgeContext : ApplicationContext
         };
 
         // --- register modules (this is the extension point) ---
-        _telemetry = new TelemetryModule(_cfg.Telemetry, _cfg.Save);
-        _hotkeys = new HotkeyModule(_cfg, relay, NotifyReady, LocalAction);   // ready feedback respects toggles; local actions handled here
+        _telemetry = new TelemetryModule(_cfg.Telemetry, _cfg.Save, () => HotkeysJson(_cfg));   // /health reports the live bindings
+        _hotkeys = new HotkeyModule(_cfg, relay, NotifyReady, LocalAction, Notify);   // ready feedback respects toggles; registration failures always alert
         _modules.Add(_hotkeys);
         _modules.Add(_telemetry);
 
@@ -288,6 +288,23 @@ internal sealed class BridgeContext : ApplicationContext
     private static void OpenUrl(string target)
     {
         try { Process.Start(new ProcessStartInfo(target) { UseShellExecute = true }); } catch { }
+    }
+
+    // The website's hotkey legend reads these semantic names; the config is key->action, so invert
+    // it into action->key (semantic). Read live so it reflects rebinds without a restart.
+    private static readonly Dictionary<string, string> _semantic = new()
+    {
+        ["ready_toggle"] = "ready", ["ready_on"] = "ready", ["ready_off"] = "ready",
+        ["host_roll"] = "roll", ["host_back"] = "back", ["host_chime"] = "chime",
+        ["host_reset"] = "reset", ["host_start"] = "start", ["telemetry_record"] = "record",
+    };
+    private static string HotkeysJson(Config cfg)
+    {
+        var m = new Dictionary<string, string>();
+        foreach (var kv in cfg.Hotkeys)   // key -> action
+            if (_semantic.TryGetValue(kv.Value, out var sem) && !m.ContainsKey(sem))
+                m[sem] = kv.Key;
+        return System.Text.Json.JsonSerializer.Serialize(m);
     }
 
     // The RRC logo: prefer the exe's own embedded icon (ApplicationIcon), then a side-by-side
