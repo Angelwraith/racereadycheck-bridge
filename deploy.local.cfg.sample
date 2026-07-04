@@ -1,0 +1,17 @@
+# RaceReadyCheck — local deploy config for release.bat  (COPY to deploy.local.cfg and fill in)
+# This file with your real values must NEVER be committed — deploy.local.cfg is git-ignored.
+# release.bat reads these to keep the website's "latest bridge version" in sync automatically.
+#
+# Format: KEY=VALUE, one per line. No quotes, no spaces around the '='. Lines starting with # are ignored.
+# Avoid a literal % in your password (batch treats it specially); a ':' is fine.
+
+# OPTIONAL — local path to the website repo's data folder. If set, release.bat also
+# updates your local copy so it matches what goes live.
+SITEDATA=C:\Dev\Deploy\racereadycheck.com\data
+
+# OPTIONAL — auto-upload over FTP. Leave FTPURL blank to skip uploading (you'd upload manually).
+# FTPURL must be the FULL destination path INCLUDING the filename bridge.json.
+# Use ftps://... (or keep ftp:// if that's what your host offers) — matches how you already deploy.
+FTPURL=ftp://your-host.example.com/httpdocs/data/bridge.json
+FTPUSER=your-ftp-username
+FTPPASS=your-ftp-password

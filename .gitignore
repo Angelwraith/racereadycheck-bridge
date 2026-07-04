@@ -9,6 +9,9 @@ RaceReadyCheckBridge/
 # Real local bridge config (can contain your token) — only the .sample is tracked
 bridge.config.json
 
+# Local deploy config for release.bat (contains your FTP password) — only the .sample is tracked
+deploy.local.cfg
+
 # Release artifacts (GitHub Releases hosts the zip; don't commit the 65MB binary)
 RaceReadyCheckBridge.zip
 
