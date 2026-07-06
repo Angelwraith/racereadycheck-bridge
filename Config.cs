@@ -15,7 +15,7 @@ public sealed class Config
 
     // Bumped whenever the default hotkey layout changes; old on-disk configs (version 0)
     // are upgraded to the current defaults on load. See Load().
-    public const int CurrentHotkeysVersion = 2;
+    public const int CurrentHotkeysVersion = 3;   // v3: moved start off F12 (Windows reserves it); roll→F7, back→Shift+F7, start→F8
     public int HotkeysVersion { get; set; } = CurrentHotkeysVersion;
 
     public Dictionary<string, string> Hotkeys { get; set; } = DefaultHotkeys();
@@ -23,13 +23,13 @@ public sealed class Config
     public static Dictionary<string, string> DefaultHotkeys() => new()
     {
         // hotkey -> action understood by api/bridge/hotkey.php (rebind in tray → Hotkeys…)
-        ["F9"]  = "ready_toggle",      // toggle your ready state
-        ["F8"]  = "host_roll",         // leader: pick a new random race
-        ["F7"]  = "host_back",         // leader: undo the last random roll (up to 10 deep)
-        ["F10"] = "host_chime",        // leader: chime/nudge players who haven't readied
-        ["F11"] = "host_reset",        // leader: cancel/reset the countdown
-        ["F12"] = "host_start",        // leader: 1st press = 120s standby, 2nd = 10s final countdown
-        ["F6"]  = "telemetry_record",  // local: start/stop recording a .flog session
+        ["F9"]      = "ready_toggle",      // toggle your ready state
+        ["F7"]      = "host_roll",         // leader: pick a new random race
+        ["Shift+F7"]= "host_back",         // leader: undo the last random roll (up to 10 deep)
+        ["F10"]     = "host_chime",        // leader: chime/nudge players who haven't readied
+        ["F11"]     = "host_reset",        // leader: cancel/reset the countdown
+        ["F8"]      = "host_start",        // leader: 1st press = 120s standby, 2nd = 10s final countdown
+        ["F6"]      = "telemetry_record",  // local: start/stop recording a .flog session
     };
 
     public TelemetryConfig Telemetry { get; set; } = new();

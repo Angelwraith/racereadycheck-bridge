@@ -127,7 +127,7 @@ internal sealed class BridgeContext : ApplicationContext
     {
         var menu = new ContextMenuStrip();
 
-        var header = new ToolStripMenuItem("RaceReadyCheck Bridge") { Enabled = false };
+        var header = new ToolStripMenuItem("RaceReadyCheck Bridge  v" + AppVersion()) { Enabled = false };
         menu.Items.Add(header);
         menu.Items.Add(new ToolStripSeparator());
 
@@ -298,6 +298,12 @@ internal sealed class BridgeContext : ApplicationContext
         ["host_roll"] = "roll", ["host_back"] = "back", ["host_chime"] = "chime",
         ["host_reset"] = "reset", ["host_start"] = "start", ["telemetry_record"] = "record",
     };
+    // The exe's version (stamped from the release tag by CI; the csproj default for local builds).
+    private static string AppVersion()
+    {
+        var v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        return v == null ? "0.0.0" : $"{v.Major}.{v.Minor}.{v.Build}";
+    }
     private static string HotkeysJson(Config cfg)
     {
         var m = new Dictionary<string, string>();
