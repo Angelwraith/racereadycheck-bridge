@@ -10,7 +10,7 @@ namespace RaceReadyCheckBridge;
 /// </summary>
 public sealed class Config
 {
-    public string SiteUrl { get; set; } = "https://racereadycheck.com";
+    public string SiteUrl { get; set; } = "https://rrc.matthewfranks.com";
     public string Token { get; set; } = "";          // paste from the website "Connect bridge" panel
 
     // Bumped whenever the default hotkey layout changes; old on-disk configs (version 0)
@@ -56,7 +56,7 @@ public sealed class Config
         /// <summary>Local-only HTTP/SSE port the browser tab reads telemetry from. Never leaves this PC.</summary>
         public int LocalPort { get; set; } = 5390;
         /// <summary>Origin allowed to read the local telemetry stream (CORS).</summary>
-        public string AllowOrigin { get; set; } = "https://racereadycheck.com";
+        public string AllowOrigin { get; set; } = "https://rrc.matthewfranks.com";
         /// <summary>Gamepad-friendly trigger: hold the in-game handbrake ~2s to start/stop
         /// recording (no keyboard). OFF by default — the handbrake is rare but not unused,
         /// so the hold gesture + this opt-in toggle avoid accidental triggers.</summary>

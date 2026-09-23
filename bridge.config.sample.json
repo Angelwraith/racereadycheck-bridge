@@ -1,5 +1,5 @@
 {
-  "SiteUrl": "https://racereadycheck.com",
+  "SiteUrl": "https://rrc.matthewfranks.com",
   "Token": "PASTE_YOUR_BRIDGE_TOKEN_HERE",
   "Hotkeys": {
     "F9": "ready_toggle",
@@ -12,6 +12,6 @@
     "Enabled": true,
     "UdpPort": 9999,
     "LocalPort": 5390,
-    "AllowOrigin": "https://racereadycheck.com"
+    "AllowOrigin": "https://rrc.matthewfranks.com"
   }
 }
